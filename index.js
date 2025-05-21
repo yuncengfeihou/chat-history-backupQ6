@@ -245,7 +245,7 @@ function constructJsonlString(metadata, messages) {
 }
 
 // 扩展名和设置初始化
-const PLUGIN_NAME = 'chat-history-backupY3';
+const PLUGIN_NAME = 'chat-history-backupQ6';
 const DEFAULT_SETTINGS = {
     maxEntityCount: 3,        // 最多保存几个不同角色/群组的备份 (新增)
     maxBackupsPerEntity: 3,   // 每个角色/群组最多保存几个备份 (新增)
@@ -254,7 +254,7 @@ const DEFAULT_SETTINGS = {
 };
 
 // IndexedDB 数据库名称和版本
-const DB_NAME = 'ST_ChatAutoBackupY3';
+const DB_NAME = 'ST_ChatAutoBackupQ6';
 const DB_VERSION = 1;
 const STORE_NAME = 'backups';
 
@@ -1273,11 +1273,6 @@ async function restoreBackup(backupData) {
             if (typeof updateBackupsList === 'function') {
                  await updateBackupsList(); 
             }
-            
-            // 添加：恢复成功后关闭UI界面
-            setTimeout(() => {
-                closeExtensionUIs();
-            }, 500); // 短暂延迟以确保toastr消息能被看到
         }
         return success;
 
@@ -2238,15 +2233,9 @@ async function restoreLatestBackup() {
         toastr.info(`正在恢复 "${latestBackup.entityName} - ${latestBackup.chatName}" 的最新备份...`, '快捷恢复');
         
         // 直接调用恢复功能，跳过确认对话框
-        const success = await restoreBackup(latestBackup);
+        await restoreBackup(latestBackup);
         
-        // 添加：如果恢复成功，关闭UI界面
-        if (success) {
-            setTimeout(() => {
-                closeExtensionUIs();
-            }, 500);
-        }
-        
+        // 恢复成功通知已在restoreBackup函数中显示
     } catch (error) {
         console.error('[聊天自动备份] 快捷恢复最新备份时出错:', error);
         toastr.error(`恢复失败: ${error.message}`, '快捷恢复');
@@ -2262,32 +2251,4 @@ function hasUserConfirmedRestore() {
 function setUserConfirmedRestore(confirmed) {
     localStorage.setItem('chat_backup_confirmed_restore', confirmed ? 'true' : 'false');
     logDebug(`[聊天自动备份] 用户恢复确认状态已保存为: ${confirmed}`);
-}
-
-// 关闭UI界面的函数
-function closeExtensionUIs() {
-    logDebug('[聊天自动备份] 正在关闭扩展UI和备份抽屉');
-    
-    // 关闭主扩展页面
-    const extensionsBlock = $('#rm_extensions_block');
-    if (extensionsBlock.length) {
-        extensionsBlock.removeClass('openDrawer').addClass('closedDrawer');
-        extensionsBlock.attr('data-slide-toggle', 'hidden');
-        extensionsBlock.css('display', 'none');
-        logDebug('[聊天自动备份] 已关闭主扩展页面');
-    }
-    
-    // 关闭备份UI抽屉
-    const backupDrawerContent = $('#chat_auto_backup_settings .inline-drawer-content');
-    if (backupDrawerContent.length) {
-        backupDrawerContent.css('display', 'none');
-        
-        // 同时更新抽屉头部的展开/收起图标状态
-        const drawerHeader = $('#chat_auto_backup_settings .inline-drawer-header');
-        const drawerIcon = drawerHeader.find('.inline-drawer-icon');
-        drawerIcon.removeClass('fa-circle-chevron-up').addClass('fa-circle-chevron-down');
-        drawerHeader.closest('.inline-drawer').removeClass('open');
-        
-        logDebug('[聊天自动备份] 已关闭备份UI抽屉');
-    }
 }
